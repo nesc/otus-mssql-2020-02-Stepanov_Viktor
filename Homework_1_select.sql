@@ -101,4 +101,4 @@ Select o.ContactPersonID as 'ID customer'
     on s.StockItemID = ol.StockItemID
  inner join Application.People p
     on p.PersonID = o.ContactPersonID
- where s.StockItemName = 'Chocolate frogs 250g'
+ where s.StockItemName = 'Chocolate frogs 250g';
