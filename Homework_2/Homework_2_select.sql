@@ -10,9 +10,9 @@ Select *
 
 Select s.SupplierName as 'Supplier'
   from Purchasing.Suppliers s
-  left join Warehouse.StockItems i
-    on i.SupplierID = s.SupplierID
- where i.StockItemID is null;
+  left join Purchasing.PurchaseOrders po
+    on po.SupplierID = s.SupplierID
+ where po.PurchaseOrderID is null;
 
 /*
 3. Продажи с названием месяца, в котором была продажа, номером квартала, к которому относится продажа, 
@@ -25,14 +25,14 @@ Select o.CustomerPurchaseOrderNumber as 'Order number'
 	  ,DATENAME(Quarter,o.orderdate) as 'Quarter'
 	  ,CAST((DATEPART(mm, o.OrderDate) - 1) / 4 as int) + 1 as 'Third'
 	  ,i.UnitPrice as 'Price'
-	  ,i.QuantityPerOuter as 'Quantity'
+	  ,ol.Quantity as 'Quantity'
   from Sales.Orders o
  inner join Sales.OrderLines ol
     on ol.OrderID = o.OrderID
  inner join Warehouse.StockItems i
     on i.StockItemID = ol.StockItemID
  where i.UnitPrice > 100
-    or i.QuantityPerOuter > 20;
+    or ol.Quantity > 20;
 
 /*
 Добавьте вариант этого запроса с постраничной выборкой пропустив первую 1000 и отобразив следующие 100 записей. 
@@ -61,20 +61,20 @@ OFFSET 1000 ROWS FETCH NEXT 100 ROWS ONLY;
 добавьте название поставщика, имя контактного лица принимавшего заказ
 */
 
-Select po.OrderDate as 'Date'
+Select po.ExpectedDeliveryDate as 'Date'
       ,po.SupplierReference 'Supplier reference'
       ,s.SupplierName as 'Supplier'
       ,p.FullName as 'Contact person'
 	  ,d.DeliveryMethodName as 'Delivery Method'
-  from Purchasing.PurchaseOrders po
- inner join Application.DeliveryMethods d
-    on d.DeliveryMethodID = po.DeliveryMethodID
- inner join Purchasing.Suppliers s
-    on s.SupplierID = po.SupplierID
- inner join Application.People p
-    on p.PersonID = po.ContactPersonID
- where YEAR(po.orderdate) = '2014'
-   and d.DeliveryMethodName in ('Road Freight', 'Post');
+from Purchasing.PurchaseOrders po
+inner join Application.DeliveryMethods d
+   on d.DeliveryMethodID = po.DeliveryMethodID
+inner join Purchasing.Suppliers s
+   on s.SupplierID = po.SupplierID
+inner join Application.People p
+   on p.PersonID = po.ContactPersonID
+where YEAR(po.ExpectedDeliveryDate) = '2014'
+  and d.DeliveryMethodName in ('Road Freight', 'Post');
 
 --5. 10 последних по дате продаж с именем клиента и именем сотрудника, который оформил заказ.
 
@@ -83,15 +83,17 @@ Select top 10 o.OrderDate 'Date'
 	  ,p1.FullName as 'Customer'
 	  ,p2.FullName as 'Sales person'
   from Sales.Orders o
+ inner join Sales.Invoices i
+    on i.OrderID = o.OrderID
  inner join Application.People p1
-    on p1.PersonID = o.ContactPersonID
+    on p1.PersonID = i.CustomerID
  inner join Application.People p2
-    on p2.PersonID = o.SalespersonPersonID
+    on p2.PersonID = i.SalespersonPersonID
  order by o.OrderDate desc;
 
 --6. Все ид и имена клиентов и их контактные телефоны, которые покупали товар Chocolate frogs 250g
 
-Select o.ContactPersonID as 'ID customer'
+Select distinct o.ContactPersonID as 'ID customer'
       ,p.FullName as 'Name'
 	  ,p.PhoneNumber as 'Phone'
   from Sales.Orders o
