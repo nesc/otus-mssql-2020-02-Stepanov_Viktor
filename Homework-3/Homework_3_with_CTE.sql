@@ -47,8 +47,17 @@ Select *
 из [Sales].[CustomerTransactions] представьте 3 способа (в том числе с CTE)
 */
 
-Select top 5 * 
+Select top 5 c.CustomerID
+      ,c.CustomerName
+	  ,c.PhoneNumber
+	  ,c.DeliveryAddressLine2
+	  ,c.DeliveryAddressLine1
+	  ,c.DeliveryPostalCode
+	  ,ct.TransactionDate
+	  ,ct.TransactionAmount
   from Sales.CustomerTransactions ct
+ inner join Sales.Customers c
+    on c.CustomerID = ct.CustomerID
  order by ct.TransactionAmount desc;
  
 with CT as(
@@ -56,23 +65,52 @@ Select top 5 CustomerTransactionID
   from Sales.CustomerTransactions ct
  order by ct.TransactionAmount desc
 )
-Select *
-  from Sales.CustomerTransactions c
- inner join CT
-    on c.CustomerTransactionID = ct.CustomerTransactionID
- order by c.TransactionAmount desc;
- 
-select * 
+Select c.CustomerID
+      ,c.CustomerName
+	  ,c.PhoneNumber
+	  ,c.DeliveryAddressLine2
+	  ,c.DeliveryAddressLine1
+	  ,c.DeliveryPostalCode
+	  ,ct.TransactionDate
+	  ,ct.TransactionAmount
   from Sales.CustomerTransactions ct
+ inner join CT cte
+    on ct.CustomerTransactionID = cte.CustomerTransactionID
+ inner join Sales.Customers c
+    on c.CustomerID = ct.CustomerID
+ order by ct.TransactionAmount desc;
+ 
+select c.CustomerID
+      ,c.CustomerName
+	  ,c.PhoneNumber
+	  ,c.DeliveryAddressLine2
+	  ,c.DeliveryAddressLine1
+	  ,c.DeliveryPostalCode
+	  ,ct.TransactionDate
+	  ,ct.TransactionAmount 
+  from Sales.CustomerTransactions ct
+ inner join Sales.Customers c
+    on c.CustomerID = ct.CustomerID
  order by TransactionAmount desc
 offset 0 rows fetch next 5 rows only
 
-select *
+select c.CustomerID
+      ,c.CustomerName
+	  ,c.PhoneNumber
+	  ,c.DeliveryAddressLine2
+	  ,c.DeliveryAddressLine1
+	  ,c.DeliveryPostalCode
+	  ,d.TransactionDate
+	  ,d.TransactionAmount 
 from (
       select ct.TransactionAmount
             ,dense_rank() over (order by ct.TransactionAmount desc) sumRank
+			,ct.CustomerID
+			,ct.TransactionDate
       from Sales.CustomerTransactions ct
 ) d
+ inner join Sales.Customers c
+    on c.CustomerID = d.CustomerID
 where d.sumRank <= 5
 order by sumRank
 
