@@ -14,8 +14,9 @@ Select DATEPART(yyyy,i.InvoiceDate) as 'Год'
 
 --2. Отобразить все месяцы, где общая сумма продаж превысила 10 000
 
-Select DateName(mm,i.InvoiceDate) + ' ' + convert(varchar(4),DATEPART(yyyy,i.InvoiceDate))	as 'Месяц'
-      ,Sum(il.UnitPrice)																	as 'Общая сумма продажи по месяцам'
+Select DATEPART(yyyy,i.InvoiceDate)	as 'Год'
+      ,DATEPART(MM,i.InvoiceDate)	as 'Месяц'
+      ,Sum(il.UnitPrice)			as 'Общая сумма продажи по месяцам'
   from Sales.Invoices i
  inner join Sales.InvoiceLines il
     on il.InvoiceID = i.InvoiceID
@@ -28,18 +29,19 @@ having Sum(il.UnitPrice) > 10000
 Группировка должна быть по году и месяцу.
 */
 
-Select DateName(mm,i.InvoiceDate) + ' ' + convert(varchar(4),DATEPART(yyyy,i.InvoiceDate))	as 'Месяц'
-      ,Sum(il.UnitPrice)	as 'Сумма продаж'
-      ,Min(i.InvoiceDate)	as 'Дата первой продажи'
-	  ,s.StockItemName		as 'Наименование товара'
-	  ,il.Quantity			as 'Количество проданного'
+Select DATEPART(yyyy,i.InvoiceDate)	as 'Год'
+      ,DATEPART(MM,i.InvoiceDate)	as 'Месяц'
+      ,Sum(il.UnitPrice)			as 'Сумма продаж'
+      ,Min(i.InvoiceDate)			as 'Дата первой продажи'
+	  ,count(il.Quantity)			as 'Количество проданного'
+	  ,s.StockItemName				as 'Наименование товара'
   from Sales.Invoices i
  inner join Sales.InvoiceLines il
     on il.InvoiceID = i.InvoiceID
  inner join Warehouse.StockItems s
     on s.StockItemID = il.StockItemID
- group by DATEPART(yyyy,i.InvoiceDate), DATEPART(MM,i.InvoiceDate), DateName(mm,i.InvoiceDate), s.StockItemName, il.Quantity
-having il.Quantity < 50
+ group by DATEPART(yyyy,i.InvoiceDate), DATEPART(MM,i.InvoiceDate), s.StockItemName
+having sum(il.Quantity) < 50
  order by DATEPART(yyyy,i.InvoiceDate), DATEPART(MM,i.InvoiceDate);
 
  /*
