@@ -171,14 +171,14 @@ Select distinct o.SalespersonPersonID					as 'SalespersonPersonID'
 Select CTE.SalespersonPersonID	as 'ID продавца'
       ,ps.FullName				as 'Имя продавца'
 	  ,CTE.CustomerID			as 'ID покупателя'
-	  ,pc.FullName				as 'Имя покупателя'
+	  ,c.CustomerName			as 'Имя покупателя'
 	  ,CTE.OrderDate			as 'Дата продажи'
 	  ,CTE.oSum					as 'Сумма заказа'
   from CTE
  inner join Application.People ps
     on ps.PersonID = CTE.SalespersonPersonID
- inner join Application.People pc
-    on pc.PersonID = CTE.CustomerID
+ inner join Sales.Customers c
+    on c.CustomerID = CTE.CustomerID
  where CTE.DRank = 1;
   
 /*
@@ -197,7 +197,7 @@ Select distinct o.CustomerID	as 'CustomerID'
     on ol.OrderID = o.OrderID
 )
 Select CTE.CustomerID	as 'ID покупателя'
-      ,pc.FullName		as 'Имя покупателя'
+      ,c.CustomerName	as 'Имя покупателя'
 	  ,CTE.StockItemID	as 'ID товара'
 	  ,si.StockItemName	as 'Название товара'
 	  ,CTE.UnitPrice	as 'Цена товара'
@@ -205,8 +205,8 @@ Select CTE.CustomerID	as 'ID покупателя'
   from CTE
  inner join Warehouse.StockItems si
     on si.StockItemID = CTE.StockItemID
- inner join Application.People pc
-    on pc.PersonID = CTE.CustomerID
+ inner join Sales.Customers c
+    on c.CustomerID = CTE.CustomerID
  where CTE.DRank <= 2
  order by CTE.CustomerID;
 
