@@ -110,5 +110,49 @@ Select s.StockItemID
       ,s.StockItemName
 	  ,Replace(Replace(Replace(JSON_QUERY(CustomFields, '$.Tags'),'[',''),']',''),'"','')
   from Warehouse.StockItems s
- Cross apply STRING_SPLIT((Replace(Replace(Replace(JSON_QUERY(CustomFields, '$.Tags'),'[',''),']',''),'"','')), ',') j
+ Cross apply OPENJSON(CustomFields, '$.Tags') j
  where j.value = 'Vintage'
+ 
+/*
+5. Пишем динамический PIVOT.
+По заданию из занятия “Операторы CROSS APPLY, PIVOT, CUBE”.
+Требуется написать запрос, который в результате своего выполнения формирует таблицу следующего вида:
+Название клиента
+МесяцГод Количество покупок
+
+Нужно написать запрос, который будет генерировать результаты для всех клиентов.
+Имя клиента указывать полностью из CustomerName.
+Дата должна иметь формат dd.mm.yyyy например 25.12.2019
+*/
+
+Declare @col   NVARCHAR(MAX)
+       ,@query NVARCHAR(MAX);
+
+Drop table if exists #CTemp;
+
+Create table #CTemp (CustomerName nvarchar(200)
+                    ,InvoiceMonth date
+					,InvoiceID    int
+					);
+
+Insert into #CTemp
+Select distinct c.CustomerName as 'CustomerName'
+      ,Format(i.InvoiceDate,'01.MM.yyyy')	as 'InvoiceMonth'
+	  ,i.InvoiceID							as 'InvoiceID'
+  from Sales.Customers c
+ inner join Sales.Invoices i
+    on i.CustomerID = c.CustomerID;
+
+Set @col = STUFF((Select distinct ',' + QUOTENAME(c.CustomerName) 
+                    from #CTemp c
+                     for XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'),1,1,'');
+
+Set @query = 'Select InvoiceMonth
+		            ,' + @col + ' 
+                from #CTemp
+               Pivot (count(InvoiceID)
+                 for CustomerName in (' + @col + ')) as Pvt
+               order by Year(InvoiceMonth)
+	                   ,Month(InvoiceMonth);'
+
+execute(@query);
