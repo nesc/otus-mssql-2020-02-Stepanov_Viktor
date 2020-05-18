@@ -64,7 +64,7 @@ go
 
 CREATE FUNCTION [dbo].[CheckPasport] (@DateB [datetime], @DateP [datetime], @DateC [datetime])
 RETURNS TABLE (string NVARCHAR(MAX))
-AS EXTERNAL NAME [CLRFunctionsCheckPasport].[UserDefinedFunctions].[CheckPasport];
+AS EXTERNAL NAME [CLRFunctionsCheckPasport].[UserDefinedFunctions].[FillRow];
 go
 
 Select *
